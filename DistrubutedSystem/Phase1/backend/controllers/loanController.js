@@ -4,8 +4,6 @@ import Book from '../models/Book.js';
 export const issueLoan = async (req, res) => {
     try {
         const { book_id, user_id, due_date } = req.body;
-
-        // Check if book exists and is available
         const book = await Book.findById(book_id);
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
@@ -15,7 +13,6 @@ export const issueLoan = async (req, res) => {
             return res.status(400).json({ message: 'No copies available' });
         }
 
-        // Check if user already has an active loan for this book
         const existingLoan = await Loan.findOne({
             user_id,
             book_id,
@@ -26,7 +23,7 @@ export const issueLoan = async (req, res) => {
             return res.status(400).json({ message: 'You already have an active loan for this book' });
         }
 
-        // Create new loan
+       
         const loan = new Loan({
             user_id,
             book_id,
@@ -35,13 +32,11 @@ export const issueLoan = async (req, res) => {
             status: 'ACTIVE'
         });
 
-        // Update book availability
         book.available_copies -= 1;
         book.borrowCount += 1;
 
         await Promise.all([loan.save(), book.save()]);
 
-        // Format the response according to the specification
         res.status(201).json({
             id: loan._id,
             user_id: loan.user_id,
@@ -68,18 +63,26 @@ export const returnBook = async (req, res) => {
             return res.status(400).json({ message: 'Book already returned' });
         }
 
-        // Update loan status
+        
         loan.status = 'RETURNED';
         loan.return_date = new Date();
 
-        // Update book availability
+        
         const book = await Book.findById(loan.book_id);
         book.available_copies += 1;
 
         await Promise.all([loan.save(), book.save()]);
 
-        await loan.populate('book_id');
-        res.json(loan);
+        
+        res.json({
+            id: loan._id,
+            user_id: loan.user_id,
+            book_id: loan.book_id,
+            issue_date: loan.issue_date,
+            due_date: loan.due_date,
+            return_date: loan.return_date,
+            status: loan.status
+        });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -90,7 +93,21 @@ export const getUserLoans = async (req, res) => {
         const loans = await Loan.find({ user_id: req.params.user_id })
             .populate('book_id')
             .sort({ createdAt: -1 });
-        res.json(loans);
+
+        const formattedLoans = loans.map(loan => ({
+            id: loan._id,
+            book: {
+                id: loan.book_id._id,
+                title: loan.book_id.title,
+                author: loan.book_id.author
+            },
+            issue_date: loan.issue_date,
+            due_date: loan.due_date,
+            return_date: loan.return_date || null,
+            status: loan.status
+        }));
+
+        res.json(formattedLoans);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

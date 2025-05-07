@@ -9,8 +9,8 @@ router.post('/register', userController.register);
 router.post('/login', userController.login);
 
 // Protected routes
-router.get('/profile', auth, userController.getProfile);
+router.get('/profile',auth, userController.getProfile);
 router.patch('/profile', auth, userController.updateProfile);
-router.get('/:id', auth, userController.getUserById);
+router.get('/:id',auth, userController.getUserById);
 
 export default router;
