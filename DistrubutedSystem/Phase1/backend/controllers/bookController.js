@@ -83,3 +83,80 @@ export const deleteBook = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// Internal methods used by other controllers
+export const findBookById = async (bookId) => {
+    try {
+        return await Book.findById(bookId);
+    } catch (error) {
+        throw new Error('Error finding book: ' + error.message);
+    }
+};
+
+export const updateBookAvailability = async (bookId, change) => {
+    try {
+        const book = await Book.findById(bookId);
+        if (!book) {
+            throw new Error('Book not found');
+        }
+        
+        book.available_copies += change;
+        if (change < 0) {
+            book.borrowCount += 1;
+        }
+        
+        return await book.save();
+    } catch (error) {
+        throw new Error('Error updating book availability: ' + error.message);
+    }
+};
+
+export const getBookDetails = async (bookId) => {
+    try {
+        const book = await Book.findById(bookId);
+        if (!book) {
+            throw new Error('Book not found');
+        }
+        return {
+            id: book._id,
+            title: book.title,
+            author: book.author
+        };
+    } catch (error) {
+        throw new Error('Error getting book details: ' + error.message);
+    }
+};
+
+export const getPopularBooks = async (req, res) => {
+    try {
+        const popularBooks = await Book.find()
+            .sort({ borrowCount: -1 })
+            .limit(10)
+            .select('title author borrowCount');
+
+        res.json(popularBooks.map(book => ({
+            book_id: book._id,
+            title: book.title,
+            author: book.author,
+            borrow_count: book.borrowCount
+        })));
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getBooksOverview = async () => {
+    try {
+        const [totalBooks, booksAvailable] = await Promise.all([
+            Book.countDocuments(),
+            Book.aggregate([{ $group: { _id: null, total: { $sum: '$available_copies' } } }])
+        ]);
+
+        return {
+            total_books: totalBooks,
+            books_available: booksAvailable[0]?.total || 0
+        };
+    } catch (error) {
+        throw new Error('Error getting books overview: ' + error.message);
+    }
+};

@@ -154,12 +154,3 @@ The application exposes the following REST API endpoints:
 
 For more reference material, see the [HELP.md](HELP.md) file, which includes links to Spring Boot and Maven documentation.
 
-## Future Improvements
-
-The following optional tasks can enhance the project:
-- Add pagination to a `GET /users` list API.
-- Add a "remove role from user" API.
-- Add `createdDate` and `updatedDate` audit fields.
-- Use DTOs for API responses instead of exposing domain entities.
-- Add Swagger/OpenAPI documentation.
-- Add integration tests for end-to-end testing.

@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import Loan from '../models/Loan.js';
 
 const generateToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -78,5 +79,64 @@ export const getUserById = async (req, res) => {
         res.json(user);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+export const getUserDetails = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        return {
+            id: user._id,
+            name: user.name,
+            email: user.email
+        };
+    } catch (error) {
+        throw new Error('Error getting user details: ' + error.message);
+    }
+};
+
+export const getActiveUsers = async (req, res) => {
+    try {
+        const activeLoans = await Loan.aggregate([
+            {
+                $group: {
+                    _id: '$user_id',
+                    books_borrowed: { $sum: 1 },
+                    current_borrows: {
+                        $sum: {
+                            $cond: [{ $eq: ['$status', 'ACTIVE'] }, 1, 0]
+                        }
+                    }
+                }
+            },
+            { $sort: { books_borrowed: -1 } },
+            { $limit: 10 }
+        ]);
+
+        const userIds = activeLoans.map(loan => loan._id);
+        const users = await User.find({ _id: { $in: userIds } });
+
+        const activeUsersData = activeLoans.map(loan => {
+            const user = users.find(u => u._id.equals(loan._id));
+            return {
+                user_id: loan._id,
+                name: user.name,
+                books_borrowed: loan.books_borrowed,
+                current_borrows: loan.current_borrows
+            };
+        });
+
+        res.json(activeUsersData);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getUsersOverview = async () => {
+    try {
+        const totalUsers = await User.countDocuments();
+        return { total_users: totalUsers };
+    } catch (error) {
+        throw new Error('Error getting users overview: ' + error.message);
     }
 };

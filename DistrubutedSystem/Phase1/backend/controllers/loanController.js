@@ -1,10 +1,12 @@
 import Loan from '../models/Loan.js';
-import Book from '../models/Book.js';
+import { findBookById, updateBookAvailability, getBookDetails, getBooksOverview } from './bookController.js';
+import { getUserDetails, getUsersOverview } from './userController.js';
 
 export const issueLoan = async (req, res) => {
     try {
         const { book_id, user_id, due_date } = req.body;
-        const book = await Book.findById(book_id);
+        
+        const book = await findBookById(book_id);
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
         }
@@ -23,7 +25,6 @@ export const issueLoan = async (req, res) => {
             return res.status(400).json({ message: 'You already have an active loan for this book' });
         }
 
-       
         const loan = new Loan({
             user_id,
             book_id,
@@ -32,10 +33,8 @@ export const issueLoan = async (req, res) => {
             status: 'ACTIVE'
         });
 
-        book.available_copies -= 1;
-        book.borrowCount += 1;
-
-        await Promise.all([loan.save(), book.save()]);
+        await updateBookAvailability(book_id, -1);
+        await loan.save();
 
         res.status(201).json({
             id: loan._id,
@@ -63,17 +62,12 @@ export const returnBook = async (req, res) => {
             return res.status(400).json({ message: 'Book already returned' });
         }
 
-        
         loan.status = 'RETURNED';
         loan.return_date = new Date();
 
-        
-        const book = await Book.findById(loan.book_id);
-        book.available_copies += 1;
+        await updateBookAvailability(loan.book_id, 1);
+        await loan.save();
 
-        await Promise.all([loan.save(), book.save()]);
-
-        
         res.json({
             id: loan._id,
             user_id: loan.user_id,
@@ -91,21 +85,16 @@ export const returnBook = async (req, res) => {
 export const getUserLoans = async (req, res) => {
     try {
         const loans = await Loan.find({ user_id: req.params.user_id })
-            .populate('book_id')
             .sort({ createdAt: -1 });
 
-        const formattedLoans = loans.map(loan => ({
+        const formattedLoans = await Promise.all(loans.map(async loan => ({
             id: loan._id,
-            book: {
-                id: loan.book_id._id,
-                title: loan.book_id.title,
-                author: loan.book_id.author
-            },
+            book: await getBookDetails(loan.book_id),
             issue_date: loan.issue_date,
             due_date: loan.due_date,
             return_date: loan.return_date || null,
             status: loan.status
-        }));
+        })));
 
         res.json(formattedLoans);
     } catch (error) {
@@ -118,26 +107,16 @@ export const getOverdueLoans = async (req, res) => {
         const loans = await Loan.find({
             status: 'ACTIVE',
             due_date: { $lt: new Date() }
-        })
-        .populate('user_id')
-        .populate('book_id');
+        });
 
-        const overdueLoans = loans.map(loan => ({
+        const overdueLoans = await Promise.all(loans.map(async loan => ({
             id: loan._id,
-            user: {
-                id: loan.user_id._id,
-                name: loan.user_id.name,
-                email: loan.user_id.email
-            },
-            book: {
-                id: loan.book_id._id,
-                title: loan.book_id.title,
-                author: loan.book_id.author
-            },
+            user: await getUserDetails(loan.user_id),
+            book: await getBookDetails(loan.book_id),
             issue_date: loan.issue_date,
             due_date: loan.due_date,
             days_overdue: Math.ceil((Date.now() - loan.due_date) / (1000 * 60 * 60 * 24))
-        }));
+        })));
 
         res.json(overdueLoans);
     } catch (error) {
@@ -175,5 +154,39 @@ export const extendLoan = async (req, res) => {
         });
     } catch (error) {
         res.status(400).json({ message: error.message });
+    }
+};
+
+export const getLoansOverview = async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const [
+            activeLoans,
+            overdueLoans,
+            loansToday,
+            returnsToday,
+            booksStats,
+            usersStats
+        ] = await Promise.all([
+            Loan.countDocuments({ status: 'ACTIVE' }),
+            Loan.countDocuments({ status: 'ACTIVE', due_date: { $lt: new Date() } }),
+            Loan.countDocuments({ issue_date: { $gte: today } }),
+            Loan.countDocuments({ return_date: { $gte: today } }),
+            getBooksOverview(),
+            getUsersOverview()
+        ]);
+
+        res.json({
+            ...booksStats,
+            ...usersStats,
+            books_borrowed: activeLoans,
+            overdue_loans: overdueLoans,
+            loans_today: loansToday,
+            returns_today: returnsToday
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

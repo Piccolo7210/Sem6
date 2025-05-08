@@ -7,7 +7,6 @@ import bookRoutes from './routes/bookRoutes.js';
 import loanRoutes from './routes/loanRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 
-
 dotenv.config();
 
 const app = express();
@@ -20,7 +19,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/loans', loanRoutes);
 app.use('/api/stats', statsRoutes);
-
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

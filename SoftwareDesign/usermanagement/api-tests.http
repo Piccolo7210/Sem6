@@ -1,5 +1,5 @@
 ### Create Role
-POST http://localhost:8080/roles
+POST http://localhost:8081/roles
 Content-Type: application/json
 
 {
@@ -7,17 +7,17 @@ Content-Type: application/json
 }
 
 ### Create User
-POST http://localhost:8080/users
+POST http://localhost:8081/users
 Content-Type: application/json
 
 {
-  "name": "Mohammed Yasin",
-  "email": "bsse1406@iit.du.ac.bd"
+  "name": "Mustakim Bin Mohsin",
+  "email": "bsse1405@iit.du.ac.bd"
 }
 
 
 ### Assign Role
-POST http://localhost:8080/users/{{userId}}/assign-role/{{roleId}}
+POST http://localhost:8081/users/{{userId}}/assign-role/{{roleId}}
 
 ### Get User
-GET http://localhost:8080/users/{{userId}}
+GET http://localhost:8081/users/{{userId}}

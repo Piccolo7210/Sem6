@@ -7,6 +7,7 @@ const router = express.Router();
 // Public routes
 router.get('/', bookController.getBooks);
 router.get('/:id', bookController.getBookById);
+router.get('/stats/popular', bookController.getPopularBooks);
 
 // Protected routes - only admin and faculty can modify books
 router.post('/', auth, authorize('admin', 'faculty'), bookController.addBook);
