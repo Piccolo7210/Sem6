@@ -108,7 +108,9 @@ export const getOverdueLoans = async (req, res) => {
             status: 'ACTIVE',
             due_date: { $lt: new Date() }
         });
-
+        if (loans.length === 0) {
+            return res.status(201).json({ message: 'No overdue loans found' });
+        }
         const overdueLoans = await Promise.all(loans.map(async loan => ({
             id: loan._id,
             user: await getUserDetails(loan.user_id),
@@ -188,5 +190,29 @@ export const getLoansOverview = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+export const getMostActiveUsers = async () => {
+    try {
+        const activeLoans = await Loan.aggregate([
+            {
+                $group: {
+                    _id: '$user_id',
+                    books_borrowed: { $sum: 1 },
+                    current_borrows: {
+                        $sum: {
+                            $cond: [{ $eq: ['$status', 'ACTIVE'] }, 1, 0]
+                        }
+                    }
+                }
+            },
+            { $sort: { books_borrowed: -1 } },
+            { $limit: 10 }
+        ]);
+
+        return activeLoans;
+    } catch (error) {
+        throw new Error('Error getting active users: ' + error.message);
     }
 };

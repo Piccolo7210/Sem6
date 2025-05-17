@@ -1,16 +1,10 @@
 import User from '../models/User.js';
+import fetch from 'node-fetch';
+import dotenv from 'dotenv';
 
-// Get all users
-export const getAllUsers = async (req, res) => {
-    try {
-        const users = await User.find();
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
+dotenv.config();
+const LOAN_SERVICE_URL = process.env.LOAN_SERVICE_URL;
 
-// Get a single user
 export const getUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -24,11 +18,19 @@ export const getUser = async (req, res) => {
 };
 
 // Create a user
-export const createUser = async (req, res) => {
-    const user = new User(req.body);
+export const registerUser = async (req, res) => {
     try {
-        const newUser = await user.save();
-        res.status(201).json(newUser);
+        const { name, email, role } = req.body;
+        const user = new User({ name, email, role });
+        const savedUser = await user.save();
+        
+        res.status(201).json({
+            id: savedUser._id,
+            name: savedUser.name,
+            email: savedUser.email,
+            role: savedUser.role,
+            created_at: savedUser.createdAt
+        });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -63,26 +65,6 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-// Update user membership status
-export const updateMembershipStatus = async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        
-        const { membershipStatus } = req.body;
-        if (!['REGULAR', 'PREMIUM'].includes(membershipStatus)) {
-            return res.status(400).json({ message: 'Invalid membership status' });
-        }
-
-        user.membershipStatus = membershipStatus;
-        const updatedUser = await user.save();
-        res.json(updatedUser);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-};
 
 // Check user status (active/membership)
 export const checkUserStatus = async (req, res) => {
@@ -95,6 +77,58 @@ export const checkUserStatus = async (req, res) => {
             active: user.active,
             membershipStatus: user.membershipStatus
         });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get most active users based on borrowing history
+export const getActiveUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        
+        // Fetch loan statistics for each user from loan service
+        const usersWithStats = await Promise.all(users.map(async (user) => {
+            try {
+                const response = await fetch(`${LOAN_SERVICE_URL}/api/loans/user/${user._id}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch loan data');
+                }
+                const { loans } = await response.json();
+                
+                // Calculate statistics
+                const books_borrowed = loans.length;
+                const current_borrows = loans.filter(loan => loan.status === 'ACTIVE').length;
+
+                return {
+                    user_id: user._id,
+                    name: user.name,
+                    books_borrowed,
+                    current_borrows
+                };
+            } catch (error) {
+                console.error(`Error fetching loans for user ${user._id}:`, error);
+                return null;
+            }
+        }));
+
+        // Filter out users with errors and sort by most books borrowed
+        const activeUsers = usersWithStats
+            .filter(user => user !== null && user.books_borrowed > 0)
+            .sort((a, b) => b.books_borrowed - a.books_borrowed)
+            .slice(0, 10);  // Get top 10 most active users
+
+        res.json(activeUsers);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get total user count
+export const getUserCount = async (req, res) => {
+    try {
+        const count = await User.countDocuments();
+        res.json({ count });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

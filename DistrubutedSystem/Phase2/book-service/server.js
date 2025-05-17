@@ -1,33 +1,22 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import express from 'express';
-import cors from 'cors';
 import mongoose from 'mongoose';
+import cors from 'cors';
 import bookRoutes from './routes/bookRoutes.js';
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+dotenv.config();
 
-// Middleware
+const app = express();
+const PORT = process.env.PORT || 3002;
+
 app.use(cors());
 app.use(express.json());
-
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/book-service', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch((err) => console.error('MongoDB connection error:', err));
-
-// Routes
 app.use('/api/books', bookRoutes);
 
-// Basic health check route
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', service: 'book-service' });
-});
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
-// Start server
 app.listen(PORT, () => {
-    console.log(`Book service running on port ${PORT}`);
+  console.log(`Book service running on port ${PORT}`);
 });

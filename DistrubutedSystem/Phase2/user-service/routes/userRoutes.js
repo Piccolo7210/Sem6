@@ -1,22 +1,20 @@
 import express from 'express';
 import {
-    getAllUsers,
     getUser,
-    createUser,
     updateUser,
     deleteUser,
-    updateMembershipStatus,
-    checkUserStatus
+    getActiveUsers,
+    getUserCount, // Import the getUserCount function
+    registerUser
 } from '../controllers/userController.js';
 
 const router = express.Router();
 
-router.get('/', getAllUsers);
+router.get('/stats/active', getActiveUsers);  // New endpoint for active users
 router.get('/:id', getUser);
-router.post('/', createUser);
+router.post('/register', registerUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
-router.put('/:id/membership', updateMembershipStatus);
-router.get('/:id/status', checkUserStatus);
+router.get('/count', getUserCount); // New endpoint for user count
 
 export default router;

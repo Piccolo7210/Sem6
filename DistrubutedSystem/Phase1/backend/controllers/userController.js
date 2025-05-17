@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import Loan from '../models/Loan.js';
+import { getMostActiveUsers } from './loanController.js';
 
 const generateToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -97,22 +97,7 @@ export const getUserDetails = async (userId) => {
 
 export const getActiveUsers = async (req, res) => {
     try {
-        const activeLoans = await Loan.aggregate([
-            {
-                $group: {
-                    _id: '$user_id',
-                    books_borrowed: { $sum: 1 },
-                    current_borrows: {
-                        $sum: {
-                            $cond: [{ $eq: ['$status', 'ACTIVE'] }, 1, 0]
-                        }
-                    }
-                }
-            },
-            { $sort: { books_borrowed: -1 } },
-            { $limit: 10 }
-        ]);
-
+        const activeLoans = await getMostActiveUsers();
         const userIds = activeLoans.map(loan => loan._id);
         const users = await User.find({ _id: { $in: userIds } });
 
