@@ -45,6 +45,7 @@ export const getBookbyID = async (req, res) => {
             author: book.author,
             isbn: book.isbn,
             copies: book.copies,
+            borrowCount: book.borrowCount,
             available_copies: book.available_copies,
             created_at: book.createdAt,
             updated_at: book.updatedAt
@@ -78,10 +79,11 @@ export const createBook = async (req, res) => {
 // Update a book
 export const updateBook = async (req, res) => {
     try {
-        const { title, author, isbn, copies } = req.body;
+        const { title, author, isbn, copies ,available_copies,borrowCount} = req.body;
+        // console.log("borrowCount", borrowCount);
         const book = await Book.findByIdAndUpdate(
             req.params.id,
-            { title, author, isbn, copies, available_copies: copies },
+            { title, author, isbn, copies: copies, available_copies: available_copies, borrowCount: borrowCount },
             { new: true }
         );
         if (!book) {
@@ -94,6 +96,7 @@ export const updateBook = async (req, res) => {
             isbn: book.isbn,
             copies: book.copies,
             available_copies: book.available_copies,
+            borrowCount: book.borrowCount,
             createdAt: book.createdAt,
             updatedAt: book.updatedAt
         });

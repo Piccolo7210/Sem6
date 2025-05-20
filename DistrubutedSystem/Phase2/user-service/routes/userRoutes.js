@@ -4,17 +4,16 @@ import {
     updateUser,
     deleteUser,
     getActiveUsers,
-    getUserCount, // Import the getUserCount function
+    getUserCount,
     registerUser
 } from '../controllers/userController.js';
 
 const router = express.Router();
-
-router.get('/stats/active', getActiveUsers);  // New endpoint for active users
+router.post('/', registerUser);
+router.get('/count', getUserCount);
+router.get('/stats/active', getActiveUsers);  
 router.get('/:id', getUser);
-router.post('/register', registerUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
-router.get('/count', getUserCount); // New endpoint for user count
 
 export default router;

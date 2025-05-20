@@ -7,7 +7,7 @@ const USER_SERVICE_URL = process.env.USER_SERVICE_URL;
 
 async function getBookDetails(bookId) {
     try {
-        const response = await fetch(`${BOOK_SERVICE_URL}/api/books/${bookId}`);
+        const response = await fetch(`${BOOK_SERVICE_URL}/${bookId}`);
         if (response.status === 404) {
             throw new Error('Book not found');
         }
@@ -25,7 +25,7 @@ async function getBookDetails(bookId) {
 
 async function getUserDetails(userId) {
     try {
-        const response = await fetch(`${USER_SERVICE_URL}/api/users/${userId}`);
+        const response = await fetch(`${USER_SERVICE_URL}/${userId}`);
         if (response.status === 404) {
             throw new Error('User not found');
         }
@@ -47,36 +47,52 @@ async function checkBookAvailability(bookId) {
 }
 
 async function updateBookAvailability(bookId, operation) {
-    const book = await getBookDetails(bookId);
-    
     try {
-        const updateResponse = await fetch(`${BOOK_SERVICE_URL}/api/books/${bookId}/availability`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                available_copies: book.available_copies + (operation === 'increment' ? 1 : -1),
-                operation
+        const book = await getBookDetails(bookId);
+        
+        // First update the borrow count
+        const updateBorrowCountResponse = await fetch(`${BOOK_SERVICE_URL}/${bookId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                borrowCount: operation === 'decrement' ? (book.borrowCount || 0) + 1 : book.borrowCount - 1
             })
         });
-        if (operation === 'decrement') {
-            await fetch(`${BOOK_SERVICE_URL}/api/books/${bookId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...book,
-                    borrowCount: (book.borrowCount || 0) + 1
-                })
-            });
+
+        if (!updateBorrowCountResponse.ok) {
+            const errorBorrowCount = await updateBorrowCountResponse.json();
+            if (updateBorrowCountResponse.status === 404) {
+                throw new Error('Book not found');
+            } else {
+                throw new Error(errorBorrowCount.message || 'Failed to update borrow count');
+            }
         }
-        if (!updateResponse.ok) {
-            throw new Error('Failed to update book availability');
+
+        // Then update the availability
+        const updateAvailabilityResponse = await fetch(`${BOOK_SERVICE_URL}/${bookId}/availability`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ operation })
+        });
+
+        if (!updateAvailabilityResponse.ok) {
+            const errorData = await updateAvailabilityResponse.json();
+            if (updateAvailabilityResponse.status === 404) {
+                throw new Error('Book not found');
+            } else if (updateAvailabilityResponse.status === 400) {
+                throw new Error('No available copies');
+            } else {
+                throw new Error(errorData.message || 'Failed to update book availability');
+            }
         }
-        
+
+        return await updateAvailabilityResponse.json();
+
     } catch (error) {
-        throw new Error('Book service unavailable');
+        console.error('Book availability update error:', error.message);
+        throw new Error(error.message || 'Book service unavailable');
     }
 }
-
 export const createLoan = async (req, res) => {
     try {
         const { user_id, book_id, due_date } = req.body;
@@ -91,6 +107,7 @@ export const createLoan = async (req, res) => {
             return res.status(503).json({ message: 'User service unavailable' });
         }
 
+        
         try {
             const isAvailable = await checkBookAvailability(book_id);
             if (!isAvailable) {
@@ -167,16 +184,6 @@ export const returnBook = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
-
-// export const getAllLoans = async (req, res) => {
-//     try {
-//         const loans = await Loan.find();
-//         res.json(loans);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
 
 
 export const getUserLoanHistory = async (req, res) => {
@@ -377,7 +384,7 @@ export const getSystemStats = async (req, res) => {
        
         let bookStats;
         try {
-            const bookResponse = await fetch(`${BOOK_SERVICE_URL}/api/books/stats`);
+            const bookResponse = await fetch(`${BOOK_SERVICE_URL}/stats`);
             if (!bookResponse.ok) {
                 throw new Error('Book service unavailable');
             }
@@ -385,11 +392,11 @@ export const getSystemStats = async (req, res) => {
         } catch (error) {
             bookStats = { total: 0, available: 0 };
         }
-
+        console.log(bookStats);
         
         let userCount;
         try {
-            const userResponse = await fetch(`${USER_SERVICE_URL}/api/users/count`);
+            const userResponse = await fetch(`${USER_SERVICE_URL}/count`);
             if (!userResponse.ok) {
                 throw new Error('User service unavailable');
             }

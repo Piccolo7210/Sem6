@@ -17,10 +17,25 @@ export const getUser = async (req, res) => {
     }
 };
 
-// Create a user
+
 export const registerUser = async (req, res) => {
     try {
         const { name, email, role } = req.body;
+        
+      
+        if (!name || !email) {
+            return res.status(400).json({ 
+                message: "Name and email are required fields" 
+            });
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ 
+                message: "A user with this email already exists" 
+            });
+        }
+
         const user = new User({ name, email, role });
         const savedUser = await user.save();
         

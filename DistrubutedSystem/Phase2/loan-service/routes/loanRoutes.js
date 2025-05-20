@@ -5,10 +5,11 @@ const router = express.Router();
 
 router.post('/', createLoan);
 router.post('/returns', returnBook);
+router.get('/overdue', checkOverdueLoans);
+router.get('/stats/overview', getSystemStats);
 router.get('/user/:user_id', getUserLoanHistory);
 router.get('/:id', getLoanDetails);
-router.get('/overdue', checkOverdueLoans);
 router.put('/:id/extend', extendLoan);
-router.get('/stats/overview', getSystemStats);
+
 
 export default router;

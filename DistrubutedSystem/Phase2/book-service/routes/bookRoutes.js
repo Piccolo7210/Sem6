@@ -8,16 +8,16 @@ import {
     checkAvailability,
     updateAvailability,
     getPopularBooks,
-    getBookStats // Importing the new controller function
+    getBookStats 
 } from '../controllers/bookController.js';
 
 const router = express.Router();
 
 router.get('/', searchBooks);
-router.get('/popular', getPopularBooks);  // New endpoint for popular books
-router.get('/stats', getBookStats); // New endpoint for book statistics
-router.get('/:id', getBookbyID);
 router.post('/', createBook);
+router.get('/popular', getPopularBooks);  
+router.get('/stats', getBookStats); 
+router.get('/:id', getBookbyID);
 router.put('/:id', updateBook);
 router.delete('/:id', deleteBook);
 router.get('/:id/availability', checkAvailability);
