@@ -25,7 +25,7 @@
 //import java.util.*;
 //import java.net.MalformedURLException;
 //import java.net.URL;
-//public class InvalidMemberTest {
+//public class AddCardTest {
 //  private WebDriver driver;
 //  private Map<String, Object> vars;
 //  JavascriptExecutor js;
@@ -40,83 +40,85 @@
 //    driver.quit();
 //  }
 //  @Test
-//  public void invalidMember() {
+//  public void addCard() {
 //    driver.get("http://localhost:4000/sign_in");
-//    driver.manage().window().setSize(new Dimension(1174, 568));
+//    driver.manage().window().setSize(new Dimension(1920, 1048));
 //    driver.findElement(By.cssSelector("button")).click();
-////    driver.findElement(By.cssSelector("#\\31--123-0 > .inner")).click();
 //    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-//    WebElement clickableElement = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#\\31--123-0 > .inner")));
-//
-//    clickableElement.click();
-//
-//    driver.findElement(By.cssSelector("li > .add-new")).click();
-//    {
-//      WebElement element = driver.findElement(By.cssSelector("li > .add-new"));
-//      Actions builder = new Actions(driver);
-//      builder.moveToElement(element).perform();
-//    }
-//    {
-//      WebElement element = driver.findElement(By.tagName("body"));
-//      Actions builder = new Actions(driver);
-//      builder.moveToElement(element, 0, 0).perform();
-//    }
-//    driver.findElement(By.id("crawljax_member_email")).click();
-//    driver.findElement(By.id("crawljax_member_email")).sendKeys("abc@gmail.com");
+//    WebElement innerElement = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".inner")));
+//    innerElement.click();
+//    driver.findElement(By.id("board_name")).sendKeys("First board");
 //    driver.findElement(By.cssSelector("button")).click();
-//    {
-//      WebElement element = driver.findElement(By.cssSelector("button"));
-//      Actions builder = new Actions(driver);
-//      builder.moveToElement(element).perform();
-//    }
-//    {
-//      WebElement element = driver.findElement(By.tagName("body"));
-//      Actions builder = new Actions(driver);
-//      builder.moveToElement(element, 0, 0).perform();
-//    }
-//    assertThat(driver.findElement(By.cssSelector(".error")).getText(), is("User does not exist"));
+//    driver.findElement(By.cssSelector(".inner")).click();
+//    driver.findElement(By.id("list_name")).sendKeys("First listt");
+//    driver.findElement(By.cssSelector("button")).click();
+//    driver.findElement(By.linkText("Add a new card...")).click();
+//    driver.findElement(By.id("card_name")).sendKeys("new card");
+//    driver.findElement(By.cssSelector("button")).click();
+//    assertThat(driver.findElement(By.cssSelector(".card-content")).getText(), is("new card"));
 //  }
 //}
+
+
+
+
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.example.BoardsPage;
+import org.example.CardPage;
+import org.example.ListPage;
 import org.example.SignInPage;
-import org.junit.Test;
-import org.junit.Before;
-import org.junit.After;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.is;
+import org.junit.*;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.Dimension;
 
-public class InvalidMemberTest {
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
+public class AddCardTest {
   private WebDriver driver;
   private SignInPage signInPage;
   private BoardsPage boardsPage;
+  private ListPage listPage;
+  private CardPage cardPage;
 
   @Before
   public void setUp() {
     WebDriverManager.firefoxdriver().setup();
     driver = new FirefoxDriver();
-    driver.manage().window().setSize(new Dimension(654, 751));
+    driver.manage().window().maximize();
+
+    // Instantiate page objects
     signInPage = new SignInPage(driver);
     boardsPage = new BoardsPage(driver);
+    listPage = new ListPage(driver);
+    cardPage = new CardPage(driver);
   }
 
   @After
   public void tearDown() {
-    driver.quit();
+    if (driver != null) {
+      driver.quit();
+    }
   }
 
   @Test
-  public void invalidMember() {
+  public void testAddCard() {
     signInPage.navigateTo();
-    driver.manage().window().setSize(new Dimension(1174, 568));
     signInPage.clickLoginButton();
+
     boardsPage.selectMemberOption();
-    boardsPage.clickAddNewMember();
-    boardsPage.enterMemberEmail("abc@gmail.com");
+    boardsPage.enterBoardName("First board");
     boardsPage.clickSubmitButton();
-    assertThat(boardsPage.getErrorMessage(), is("User does not exist"));
+
+    boardsPage.clickViewContainer(); // Optional if needed to open the board view again
+
+    listPage.enterListName("First listt");
+    listPage.clickSubmitButton();
+
+    cardPage.clickAddCardLink();
+    cardPage.enterCardName("new card");
+    cardPage.clickSubmitButton();
+
+    assertThat(cardPage.getCardContent(), is("new card"));
   }
 }

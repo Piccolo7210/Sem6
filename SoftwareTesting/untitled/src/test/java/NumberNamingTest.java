@@ -25,7 +25,7 @@
 //import java.util.*;
 //import java.net.MalformedURLException;
 //import java.net.URL;
-//public class CreateBoardTest {
+//public class NumberNamingTest {
 //  private WebDriver driver;
 //  private Map<String, Object> vars;
 //  JavascriptExecutor js;
@@ -36,57 +36,50 @@
 //    driver = new FirefoxDriver();
 //    driver.manage().window().setSize(new Dimension(654, 751));
 //    wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+//
 //  }
 //  @After
 //  public void tearDown() {
 //    driver.quit();
 //  }
 //  @Test
-//  public void createBoard() {
+//  public void numberNaming() {
 //    driver.get("http://localhost:4000/sign_in");
-//    driver.manage().window().setSize(new Dimension(810, 703));
-//    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button"))).click();
-//
-//    // Click "Add New Board"
-//    wait.until(ExpectedConditions.elementToBeClickable(By.id("add_new_board"))).click();
-//
-//    // Enter board name
-//    WebElement boardNameInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("board_name")));
-//    boardNameInput.sendKeys("@123!{0");
-//
-//    // Submit board creation
-//    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button"))).click();
-//
-//    // Open Boards Nav
-//    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#boards_nav span"))).click();
-//
-//    // Click "View all boards"
-//    wait.until(ExpectedConditions.elementToBeClickable(By.linkText("View all boards"))).click();
-//
-//    // Click the newly created board
-//    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("h4"))).click();
-//
-//    // Verify board name
-//    String boardTitle = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("h3"))).getText();
-//    assertThat(boardTitle, is("@123!{0"));
+//    driver.manage().window().setSize(new Dimension(1920, 1048));
+//    driver.findElement(By.linkText("Create new account")).click();
+//    driver.findElement(By.id("user_first_name")).click();
+//    driver.findElement(By.id("user_first_name")).sendKeys("123");
+//    driver.findElement(By.id("user_last_name")).click();
+//    driver.findElement(By.id("user_last_name")).sendKeys("23");
+//    driver.findElement(By.id("user_email")).click();
+//    driver.findElement(By.id("user_email")).sendKeys("abc@gmail.com");
+//    driver.findElement(By.id("user_password")).sendKeys("12345");
+//    driver.findElement(By.id("user_password_confirmation")).sendKeys("12345");
+//    driver.findElement(By.cssSelector("button")).click();
+////    assertThat(driver.findElement(By.cssSelector("span:nth-child(3)")).getText(), is("123 23"));
+//    WebElement targetElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("span:nth-child(3)")));
+//    assertThat(targetElement.getText(), is("123 23"));
 //  }
 //}
+
+
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.example.BoardsPage;
 import org.example.SignInPage;
-import org.junit.Test;
-import org.junit.Before;
+import org.example.SignUpPage;
 import org.junit.After;
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.is;
+import org.junit.Before;
+import org.junit.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.Dimension;
 
-public class CreateBoardTest {
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+public class NumberNamingTest {
   private WebDriver driver;
   private SignInPage signInPage;
-  private BoardsPage boardsPage;
+  private SignUpPage signUpPage;
 
   @Before
   public void setUp() {
@@ -94,7 +87,7 @@ public class CreateBoardTest {
     driver = new FirefoxDriver();
     driver.manage().window().setSize(new Dimension(654, 751));
     signInPage = new SignInPage(driver);
-    boardsPage = new BoardsPage(driver);
+    signUpPage = new SignUpPage(driver);
   }
 
   @After
@@ -103,16 +96,27 @@ public class CreateBoardTest {
   }
 
   @Test
-  public void createBoard() {
+  public void numberNaming() {
+    // Navigate to the sign-in page
     signInPage.navigateTo();
-    driver.manage().window().setSize(new Dimension(810, 703));
-    signInPage.clickLoginButton();
-    boardsPage.clickAddNewBoard();
-    boardsPage.enterBoardName("@123!{0");
-    boardsPage.clickSubmitButton();
-    boardsPage.openBoardsNav();
-    boardsPage.clickViewAllBoards();
-    boardsPage.clickBoardLink();
-    assertThat(boardsPage.getBoardTitle(), is("@123!{0"));
+
+    // Resize window
+    driver.manage().window().setSize(new Dimension(1920, 1048));
+
+    // Click "Create new account" link
+    signInPage.clickCreateNewAccountLink();
+
+    // Fill out the sign-up form
+    signUpPage.enterFirstName("123");
+    signUpPage.enterLastName("23");
+    signUpPage.enterEmail("abc@gmail.com");
+    signUpPage.enterPassword("12345");
+    signUpPage.enterPasswordConfirmation("12345");
+
+    // Submit the form
+    signUpPage.clickSubmitButton();
+
+    // Verify the displayed name is "123 23"
+    assertThat(signUpPage.getDisplayedName(), is("123 23"));
   }
 }

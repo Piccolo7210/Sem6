@@ -84,7 +84,6 @@ export const deleteBook = async (req, res) => {
     }
 };
 
-// Internal methods used by other controllers
 export const findBookById = async (bookId) => {
     try {
         return await Book.findById(bookId);
