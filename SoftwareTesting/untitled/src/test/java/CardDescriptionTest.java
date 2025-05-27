@@ -146,6 +146,111 @@
 //  }
 //}
 
+//working
+
+
+//import io.github.bonigarcia.wdm.WebDriverManager;
+//import org.example.BoardsPage;
+//import org.example.CardPage;
+//import org.example.ListPage;
+//import org.example.SignInPage;
+//import org.junit.After;
+//import org.junit.Before;
+//import org.junit.Test;
+//import org.openqa.selenium.WebDriver;
+//import org.openqa.selenium.firefox.FirefoxDriver;
+//import org.openqa.selenium.Dimension;
+//import org.openqa.selenium.OutputType;
+//import org.openqa.selenium.TakesScreenshot;
+//
+//import java.io.File;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
+//
+//import static org.hamcrest.CoreMatchers.is;
+//import static org.junit.Assert.assertThat;
+//
+//public class CardDescriptionTest {
+//  private WebDriver driver;
+//  private SignInPage signInPage;
+//  private BoardsPage boardsPage;
+//  private ListPage listPage;
+//  private CardPage cardPage;
+//
+//  @Before
+//  public void setUp() {
+//    WebDriverManager.firefoxdriver().setup();
+//    driver = new FirefoxDriver();
+//    driver.manage().window().maximize();
+//    signInPage = new SignInPage(driver);
+//    boardsPage = new BoardsPage(driver);
+//    listPage = new ListPage(driver);
+//    cardPage = new CardPage(driver);
+//  }
+//
+//  @After
+//  public void tearDown() {
+//    driver.quit();
+//  }
+//
+//  @Test
+//  public void cardDescription() {
+//    // Navigate to the sign-in page
+//    signInPage.navigateTo();
+//
+//    // Resize window
+//    driver.manage().window().setSize(new Dimension(1047, 1064));
+//
+//    // Click login button (assuming pre-authenticated session)
+//    // If credentials are needed, uncomment and provide valid credentials
+//    // signInPage.enterEmail("valid@email.com");
+//    // signInPage.enterPassword("validPassword");
+//    signInPage.clickLoginButton();
+//    System.out.println("Logged in");
+//
+//    // Create a new board
+//    boardsPage.clickAddNewBoard();
+//    boardsPage.enterBoardName("qewe");
+//    boardsPage.clickSubmitButton();
+//    System.out.println("Board created");
+//
+//    // Create a new list
+//    boardsPage.clickInner();
+//    boardsPage.enterListName("sdfsdf");
+//    boardsPage.clickSubmitButton();
+//    System.out.println("List created");
+//
+//    // Create a new card
+//    boardsPage.clickAddNewCardLink();
+//    boardsPage.enterCardName("btrte");
+//    boardsPage.clickSubmitButton();
+//    System.out.println("Card created");
+//
+//    // Edit card description
+//    cardPage.clickCardContent();
+//    System.out.println("Clicked card content");
+//    cardPage.clickEditLink();
+//    System.out.println("Clicked edit link");
+//    cardPage.enterDescription("tr");
+//    System.out.println("Entered description");
+//    cardPage.clickSubmitButton();
+//    System.out.println("Submitted description");
+//
+//    // Take screenshot for debugging
+//    try {
+//      File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+//      Files.copy(screenshot.toPath(), Paths.get("error_screenshot.png"));
+//      System.out.println("Screenshot saved as error_screenshot.png");
+//    } catch (Exception e) {
+//      System.out.println("Failed to save screenshot: " + e.getMessage());
+//    }
+//
+//    // Verify the card description
+//    assertThat(cardPage.getDescriptionText(), is("tr"));
+//  }
+//}
+
+
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.example.BoardsPage;
@@ -199,12 +304,11 @@ public class CardDescriptionTest {
     // Resize window
     driver.manage().window().setSize(new Dimension(1047, 1064));
 
-    // Click login button (assuming pre-authenticated session)
-    // If credentials are needed, uncomment and provide valid credentials
+    // Login (uncomment and provide valid credentials if needed)
     // signInPage.enterEmail("valid@email.com");
     // signInPage.enterPassword("validPassword");
     signInPage.clickLoginButton();
-    System.out.println("Logged in");
+    System.out.println("Logged in. Current URL: " + driver.getCurrentUrl());
 
     // Create a new board
     boardsPage.clickAddNewBoard();
@@ -228,7 +332,22 @@ public class CardDescriptionTest {
     cardPage.clickCardContent();
     System.out.println("Clicked card content");
     cardPage.clickEditLink();
-    System.out.println("Clicked edit link");
+    System.out.println("Clicked edit link. Current URL: " + driver.getCurrentUrl());
+
+    // Check if textarea is present
+    System.out.println("Is description textarea present? " + cardPage.isDescriptionTextareaPresent());
+    if (!cardPage.isDescriptionTextareaPresent()) {
+      try {
+        Files.write(Paths.get("page_source.html"), driver.getPageSource().getBytes());
+        System.out.println("Page source saved as page_source.html");
+      } catch (Exception e) {
+        System.out.println("Failed to save page source: " + e.getMessage());
+      }
+    }
+
+    // Uncomment if a description tab or modal trigger is needed
+    // cardPage.clickDescriptionTab();
+
     cardPage.enterDescription("tr");
     System.out.println("Entered description");
     cardPage.clickSubmitButton();
