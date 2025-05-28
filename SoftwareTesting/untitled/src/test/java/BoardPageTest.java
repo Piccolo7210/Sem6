@@ -90,9 +90,11 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class AddBoardMemberTest {
+public class BoardPageTest {
   private WebDriver driver;
   private SignInPage signInPage;
   private BoardsPage boardsPage;
@@ -158,5 +160,55 @@ public class AddBoardMemberTest {
 
     // Verify the member avatar is present
     assertTrue("At least one member avatar should be present", boardsPage.isMemberAvatarPresent());
+  }
+
+  @Test
+  public void addWithoutEmail() {
+    signInPage.navigateTo();
+
+    // Resize window
+    driver.manage().window().setSize(new Dimension(1151, 1063));
+
+    // Login (uncomment and provide valid credentials if needed)
+    // signInPage.enterEmail("valid@email.com");
+    // signInPage.enterPassword("validPassword");
+    signInPage.clickLoginButton();
+    System.out.println("Logged in. Current URL: " + driver.getCurrentUrl());
+
+    // Create a new board
+    boardsPage.clickAddNewBoard();
+    boardsPage.enterBoardName("trm");
+    boardsPage.clickSubmitButton();
+    System.out.println("Board created");
+
+    // Add a new member
+    boardsPage.clickAddNewMember();
+    System.out.println("Clicked add new member");
+//    boardsPage.enterMemberEmail("");
+    assertThat(boardsPage.getEmailFieldValidationMessage(), is("Please fill out this field."));
+  }
+  @Test
+  public void createBoard() {
+    signInPage.navigateTo();
+    driver.manage().window().setSize(new Dimension(810, 703));
+    signInPage.clickLoginButton();
+    boardsPage.clickAddNewBoard();
+    boardsPage.enterBoardName("@123!{0");
+    boardsPage.clickSubmitButton();
+    boardsPage.openBoardsNav();
+    boardsPage.clickViewAllBoards();
+    boardsPage.clickBoardLink();
+    assertThat(boardsPage.getBoardTitle(), is("@123!{0"));
+  }
+  @Test
+  public void invalidMailAdd() {
+    signInPage.navigateTo();
+    driver.manage().window().setSize(new Dimension(1174, 568));
+    signInPage.clickLoginButton();
+    boardsPage.selectMemberOption();
+    boardsPage.clickAddNewMember();
+    boardsPage.enterMemberEmail("abczczxc@gmail.com");
+    boardsPage.clickSubmitButton();
+    assertThat(boardsPage.getErrorMessage(), is("User does not exist"));
   }
 }

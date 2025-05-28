@@ -25,7 +25,7 @@
 //import java.util.*;
 //import java.net.MalformedURLException;
 //import java.net.URL;
-//public class cardTagTest {
+//public class AddListTest {
 //  private WebDriver driver;
 //  private Map<String, Object> vars;
 //  JavascriptExecutor js;
@@ -34,7 +34,7 @@
 //  public void setUp() {
 //    WebDriverManager.firefoxdriver().setup();
 //    driver = new FirefoxDriver();
-//    driver.manage().window().setSize(new Dimension(654, 751));
+//    driver.manage().window().maximize();
 //    wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 //  }
 //  @After
@@ -42,65 +42,51 @@
 //    driver.quit();
 //  }
 //  @Test
-//  public void descriptioncard() {
+//  public void addList() {
 //    driver.get("http://localhost:4000/sign_in");
-//    driver.manage().window().setSize(new Dimension(943, 1063));
+//    driver.manage().window().setSize(new Dimension(903, 1063));
 //    driver.findElement(By.cssSelector("button")).click();
 ////    driver.findElement(By.id("add_new_board")).click();
-//    wait.until(ExpectedConditions.elementToBeClickable(By.id("add_new_board"))).click();
-//    driver.findElement(By.id("board_name")).sendKeys("xzcz");
-////    driver.findElement(By.cssSelector("button")).click();
-//    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button"))).click();
+//    By addNewBoardButton = By.id("add_new_board");
+//    wait.until(ExpectedConditions.elementToBeClickable(addNewBoardButton)).click();
+//
+//    driver.findElement(By.id("board_name")).click();
+//    driver.findElement(By.id("board_name")).sendKeys("asdczxzx");
+//    driver.findElement(By.cssSelector("button")).click();
 //    driver.findElement(By.cssSelector(".inner")).click();
-//    driver.findElement(By.id("list_name")).sendKeys("asdac");
-////    driver.findElement(By.cssSelector("button")).click();
-//    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button"))).click();
-//    driver.findElement(By.linkText("Add a new card...")).click();
-//    driver.findElement(By.id("card_name")).sendKeys("fasda");
-////    driver.findElement(By.cssSelector("button")).click();
-//    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button"))).click();
-//    {
-//      WebElement element = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button")));
-//      Actions builder = new Actions(driver);
-//      builder.moveToElement(element).perform();
-//    }
-////    driver.findElement(By.cssSelector(".card-content")).click();
-//    wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector(".card-content")));
-//    driver.findElement(By.cssSelector(".button:nth-child(3) > span")).click();
-//    driver.findElement(By.cssSelector(".green")).click();
-//    {
-//      List<WebElement> elements = driver.findElements(By.cssSelector(".tag:nth-child(2)"));
-//      assert(elements.size() > 0);
-//    }
+//    driver.findElement(By.id("list_name")).sendKeys("bgh");
+//    driver.findElement(By.cssSelector("button")).click();
+//    assertThat(driver.findElement(By.cssSelector("h4")).getText(), is("bgh"));
 //  }
 //}
 
+
+
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.example.BoardsPage;
-import org.example.CardPage;
 import org.example.ListPage;
 import org.example.SignInPage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.Dimension;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
-public class CardTagTest {
+public class ListPageTest {
   private WebDriver driver;
   private SignInPage signInPage;
   private BoardsPage boardsPage;
   private ListPage listPage;
-  private CardPage cardPage;
 
   @Before
   public void setUp() {
@@ -110,7 +96,6 @@ public class CardTagTest {
     signInPage = new SignInPage(driver);
     boardsPage = new BoardsPage(driver);
     listPage = new ListPage(driver);
-    cardPage = new CardPage(driver);
   }
 
   @After
@@ -119,61 +104,88 @@ public class CardTagTest {
   }
 
   @Test
-  public void Test() {
+  public void addList() {
     // Navigate to the sign-in page
     signInPage.navigateTo();
 
     // Resize window
-    driver.manage().window().setSize(new Dimension(943, 1063));
+    driver.manage().window().setSize(new Dimension(903, 1063));
+
+    // Click login button (assuming pre-authenticated session)
+    signInPage.clickLoginButton();
+
+    // Click "Add new board" button
+    boardsPage.clickAddNewBoard();
+
+    // Enter board name and submit
+    boardsPage.enterBoardName("asdczxzx");
+    boardsPage.clickSubmitButton();
+
+    // Click inner element to access list creation
+    boardsPage.clickInner();
+
+    // Enter list name and submit
+    boardsPage.enterListName("bgh");
+    boardsPage.clickSubmitButton();
+
+    // Verify the list title
+    assertThat(listPage.getListTitle(), is("bgh"));
+  }
+  @Test
+  public void updateListTest() {
+    // Navigate to the sign-in page
+    signInPage.navigateTo();
+    System.out.println("Navigated to sign-in page. Current URL: " + driver.getCurrentUrl());
+
+    // Resize window
+    driver.manage().window().setSize(new Dimension(1151, 1063));
 
     // Login (uncomment and provide valid credentials if needed)
-    // signInPage.enterEmail("valid@email.com");
+    // signInPage.enterEmail("valid@example.com");
     // signInPage.enterPassword("validPassword");
     signInPage.clickLoginButton();
     System.out.println("Logged in. Current URL: " + driver.getCurrentUrl());
 
     // Create a new board
-    boardsPage.clickAddNewBoard();
-    boardsPage.enterBoardName("xzcz");
+    boardsPage.clickAddNewInner();
+    boardsPage.enterBoardName("hyjn");
     boardsPage.clickSubmitButton();
     System.out.println("Board created");
 
     // Create a new list
     boardsPage.clickInner();
-    boardsPage.enterListName("asdac");
+    boardsPage.enterListName("yuiyiy");
     boardsPage.clickSubmitButton();
     System.out.println("List created");
 
-    // Create a new card
-    boardsPage.clickAddNewCardLink();
-    boardsPage.enterCardName("fasda");
-    boardsPage.clickSubmitButton();
-    System.out.println("Card created");
+    // Update the list name
+    listPage.clickListTitle();
+    System.out.println("Clicked list title");
+    listPage.updateListName("poiuyuiyiy");
+    System.out.println("Updated list name");
+    listPage.clickSubmitButton();
+    System.out.println("Submitted list update");
 
-    // Add a tag to the card
-    cardPage.clickCardContent();
-    System.out.println("Clicked card content. Current URL: " + driver.getCurrentUrl());
-    cardPage.clickTagButton();
-    System.out.println("Clicked tag button");
-    cardPage.selectGreenTag();
     // Take screenshot for debugging
     try {
       File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-      Files.copy(screenshot.toPath(), Paths.get("tag_screenshot.png"));
-      System.out.println("Screenshot saved as tag_screenshot.png");
+      Files.copy(screenshot.toPath(), Paths.get("update_list_screenshot.png"));
+      System.out.println("Screenshot saved as update_list_screenshot.png");
     } catch (Exception e) {
       System.out.println("Failed to save screenshot: " + e.getMessage());
     }
 
     // Save page source for debugging
     try {
-      Files.writeString(Paths.get("tag_source.html"), driver.getPageSource());
-      System.out.println("Page source saved as tag_source.html");
+      Files.writeString(Paths.get("update_list_source.html"), driver.getPageSource());
+      System.out.println("Page source saved as update_list_source.html");
     } catch (Exception e) {
       System.out.println("Failed to save page source: " + e.getMessage());
     }
 
-    // Verify the tag exists
-    assertTrue("At least one tag should be present", cardPage.isTagPresent());
+    // Verify the list title
+    String listTitle = listPage.getListTitle();
+    System.out.println("List title found: " + listTitle);
+    assertThat(listTitle, is("poiuyuiyiy"));
   }
 }

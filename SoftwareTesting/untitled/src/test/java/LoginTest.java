@@ -90,4 +90,37 @@ public class LoginTest {
     signInPage.clickLoginButton();
     assertThat(homePage.getDisplayedName(), is("John Doe"));
   }
+  @Test
+  public void signInWithoutEmail() {
+    driver.get("http://localhost:4000/sign_in");
+    signInPage.enterEmail("");
+    signInPage.enterPassword("12345");
+    signInPage.clickLoginButton();
+    assertThat(signInPage.getEmailFieldValidationMessage(), is("Please fill out this field."));
+  }
+
+  @Test
+  public void signInWithoutPassword() {
+    driver.get("http://localhost:4000/sign_in");
+//    signInPage.clickLoginButton();
+    signInPage.enterPassword("12345");
+    signInPage.clickLoginButton();
+    assertThat(signInPage.getPasswordFieldValidationMessage(), is("Please fill out this field."));
+  }
+  @Test
+  public void wrongPasswordLogin() {
+    signInPage.navigateTo();
+    driver.manage().window().setSize(new Dimension(810, 703));
+    signInPage.enterPassword("admin");
+    signInPage.clickLoginButton();
+    assertThat(signInPage.getErrorMessage(), is("Invalid email or password"));
+  }
+  @Test
+  public void wrongEmailLogin() {
+    signInPage.navigateTo();
+    driver.manage().window().setSize(new Dimension(810, 703));
+    signInPage.enterEmail("sadzxczxc@gmail.com");
+    signInPage.clickLoginButton();
+    assertThat(signInPage.getErrorMessage(), is("Invalid email or password"));
+  }
 }

@@ -192,9 +192,10 @@ public class BoardsPage {
     private By cardNameInput = By.id("card_name");
     private By cardContent = By.cssSelector(".card-content");
     private By inner = By.cssSelector(".inner");
-        private By commentTextarea = By.cssSelector("textarea");
+    private By commentTextarea = By.cssSelector("textarea");
     private By commentText = By.cssSelector(".text");
     private By memberAvatar = By.cssSelector("li:nth-child(2) > .react-gravatar");
+    private By addNewInner = By.cssSelector(".add-new > .inner");
 
     public BoardsPage(WebDriver driver) {
         this.driver = driver;
@@ -286,7 +287,8 @@ public class BoardsPage {
     public void clickCardContent() {
         wait.until(ExpectedConditions.elementToBeClickable(cardContent)).click();
     }
-        public void enterCardComment(String comment) {
+
+    public void enterCardComment(String comment) {
         wait.until(ExpectedConditions.visibilityOfElementLocated(commentTextarea)).sendKeys(comment);
     }
 
@@ -298,6 +300,15 @@ public class BoardsPage {
     public boolean isMemberAvatarPresent() {
         List<WebElement> avatars = driver.findElements(memberAvatar);
         return avatars.size() > 0;
+    }
+
+    public String getEmailFieldValidationMessage() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(memberEmailField)).clear();
+        return wait.until(ExpectedConditions.presenceOfElementLocated(memberEmailField)).getAttribute("validationMessage");
+    }
+
+    public void clickAddNewInner() {
+        wait.until(ExpectedConditions.elementToBeClickable(addNewInner)).click();
     }
 }
 

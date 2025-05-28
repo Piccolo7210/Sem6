@@ -20,6 +20,7 @@ public class SignUpPage {
     private By passwordConfirmationField = By.id("user_password_confirmation");
     private By submitButton = By.cssSelector("button");
     private By nameSpan = By.cssSelector("span:nth-child(3)");
+    private By errorMessage = By.cssSelector(".error");
 
     public SignUpPage(WebDriver driver) {
         this.driver = driver;
@@ -54,5 +55,29 @@ public class SignUpPage {
 
     public String getDisplayedName() {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(nameSpan)).getText();
+    }
+    public String getEmailFieldValidationMessage() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(emailField)).clear();
+        return wait.until(ExpectedConditions.presenceOfElementLocated(emailField)).getAttribute("validationMessage");
+    }
+
+    public String getPasswordFieldValidationMessage() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(passwordField)).clear();
+        return wait.until(ExpectedConditions.presenceOfElementLocated(passwordField)).getAttribute("validationMessage");
+    }
+    public String getFirstNameValidationMessage() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(firstNameField)).clear();
+        return wait.until(ExpectedConditions.presenceOfElementLocated(firstNameField)).getAttribute("validationMessage");
+    }
+    public String getLastNameValidationMessage() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(lastNameField)).clear();
+        return wait.until(ExpectedConditions.presenceOfElementLocated(lastNameField)).getAttribute("validationMessage");
+    }
+    public String getPasswordConfirmationValidationMessage() {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(passwordConfirmationField)).clear();
+        return wait.until(ExpectedConditions.presenceOfElementLocated(passwordConfirmationField)).getAttribute("validationMessage");
+    }
+    public String getErrorMessage() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(errorMessage)).getText();
     }
 }
